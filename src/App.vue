@@ -106,15 +106,17 @@
           });
         }
 
+        console.log(numbers);
+
         if (this.symbol == "xauusd" || this.symbol == "gold") {
-          for (var a = 0; a < numbers.length; a++) {
+          for (var x = 0; x < numbers.length; x++) {
             if (
-              numbers[a] != 1 &&
-              numbers[a] != 2 &&
-              numbers[a] != 3 &&
-              numbers[a] != 4
+              numbers[x] != 1 &&
+              numbers[x] != 2 &&
+              numbers[x] != 3 &&
+              numbers[x] != 4
             ) {
-              this.finalNumbers.push(numbers[i]);
+              this.finalNumbers.push(numbers[x]);
             }
           }
         } else {
