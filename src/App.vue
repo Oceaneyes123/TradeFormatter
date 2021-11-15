@@ -2,7 +2,7 @@
   <v-app>
     <v-container class="fill-height">
       <v-row justify="center">
-        <v-col cols="5" class="d-flex flex-column">
+        <v-col cols="10" md="5" class="d-flex flex-column">
           <div class="headline font-weight-bold blue--text mb-5 text-center">
             TRADE FORMATTER
           </div>
@@ -10,12 +10,20 @@
           <v-btn color="primary" class="mx-auto" @click="format()"
             >Format</v-btn
           >
-          <v-card class="pa-5" color="blue lighten-3 mt-7 rounded-xl" flat>
+          <v-card
+            class="pa-5"
+            color="blue lighten-3 mt-7 rounded-xl"
+            flat
+            ref="text"
+          >
             <div>{{ symbol }}</div>
             <div>{{ direction }}</div>
             <div>{{ entryPrice }}</div>
             <div>{{ stopLoss }}</div>
           </v-card>
+          <v-btn color="primary" class="mx-auto mt-5" @click="copyText()"
+            >COPY</v-btn
+          >
         </v-col>
       </v-row>
     </v-container>
@@ -74,6 +82,27 @@
     }),
 
     methods: {
+      selectText(element) {
+        var range;
+        if (document.selection) {
+          // IE
+          range = document.body.createTextRange();
+          range.moveToElementText(element);
+          range.select();
+        } else if (window.getSelection) {
+          range = document.createRange();
+          range.selectNode(element);
+          window.getSelection().removeAllRanges();
+          window.getSelection().addRange(range);
+        }
+      },
+
+      copyText() {
+        this.selectText(this.$refs.text); // e.g. <div ref="text">
+        console.log(this.$refs.text);
+        document.execCommand("copy");
+      },
+
       format() {
         this.sentence = this.message;
         for (var i = 0; i < this.list_of_symbols.length; i++) {
