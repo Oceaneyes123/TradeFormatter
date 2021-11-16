@@ -25,6 +25,20 @@
             >COPY</v-btn
           >
         </v-col>
+        <v-col cols="10" md="5">
+          <v-card color="teal">
+            <div v-for="(trade, i) in trades" :key="i">
+              <v-card width="100%" class="pa-5 mb-3 d-flex">
+                <div>
+                  <div>{{ trade.symbol }}</div>
+                  <div>{{ trade.direction }}</div>
+                  <div>{{ trade.entryPrice }}</div>
+                  <div>{{ trade.stopLoss }}</div>
+                </div>
+              </v-card>
+            </div>
+          </v-card>
+        </v-col>
       </v-row>
     </v-container>
   </v-app>
@@ -79,6 +93,7 @@
       takeProfit: 0,
       entryPrice: 0,
       finalNumbers: [],
+      trades: [],
     }),
 
     methods: {
@@ -181,6 +196,13 @@
           this.stopLoss,
           this.direction
         );
+
+        this.trades.push({
+          symbol: this.symbol,
+          entryPrice: this.entryPrice,
+          stopLoss: this.stopLoss,
+          direction: this.direction,
+        });
 
         this.finalNumbers = [];
 
