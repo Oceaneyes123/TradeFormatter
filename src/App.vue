@@ -182,6 +182,8 @@
           this.direction
         );
 
+        this.finalNumbers = [];
+
         //send data through axios
         axios
           .post(
