@@ -3,6 +3,10 @@
     <v-container class="fill-height">
       <v-row justify="center">
         <v-col cols="10" md="5" class="d-flex flex-column">
+          <div>
+            Lets buy Eurjpy @129.961 - 129.761 TP 1 : 130.161 TP 2 : 130.361
+            SL❗️ 129.361
+          </div>
           <div class="headline font-weight-bold blue--text mb-5 text-center">
             TRADE FORMATTER
           </div>
@@ -26,16 +30,39 @@
           >
         </v-col>
         <v-col cols="10" md="5">
-          <v-card color="teal">
-            <div v-for="(trade, i) in trades" :key="i">
-              <v-card width="100%" class="pa-5 mb-3 d-flex">
-                <div>
-                  <div>{{ trade.symbol }}</div>
-                  <div>{{ trade.direction }}</div>
-                  <div>{{ trade.entryPrice }}</div>
-                  <div>{{ trade.stopLoss }}</div>
-                </div>
-              </v-card>
+          <v-card
+            color="teal accent-2"
+            class="pa-5"
+            max-height="500"
+            style="overflow-y: scroll"
+          >
+            <div :key="deleteRefreshKey">
+              <div v-for="(trade, i) in trades" :key="i">
+                <v-container>
+                  <v-row>
+                    <v-col col="5">
+                      <v-card width="100%" class="pa-5 mb-3 d-flex">
+                        <div>
+                          <div>{{ trade.symbol }}</div>
+                          <div>{{ trade.direction }}</div>
+                          <div>{{ trade.entryPrice }}</div>
+                          <div>{{ trade.stopLoss }}</div>
+                        </div>
+                      </v-card>
+                    </v-col>
+                    <v-col class="d-flex flex-column">
+                      <v-btn class="mb-2"> HALF </v-btn>
+                      <v-btn class="mb-2"> TAKE PROFIT </v-btn>
+                      <v-btn class="mb-2" @click="closePending(trade)">
+                        CLOSE PENDING
+                      </v-btn>
+                      <v-btn class="mb-2"> CUTLOSS </v-btn>
+                      <v-btn class="mb-2"> REOPEN </v-btn>
+                    </v-col>
+                  </v-row>
+                </v-container>
+                <v-divider></v-divider>
+              </div>
             </div>
           </v-card>
         </v-col>
@@ -94,28 +121,41 @@
       entryPrice: 0,
       finalNumbers: [],
       trades: [],
+      deleteRefreshKey: 0,
     }),
 
+    mounted() {
+      this.getTrades();
+    },
+
     methods: {
-      selectText(element) {
-        var range;
-        if (document.selection) {
-          // IE
-          range = document.body.createTextRange();
-          range.moveToElementText(element);
-          range.select();
-        } else if (window.getSelection) {
-          range = document.createRange();
-          range.selectNode(element);
-          window.getSelection().removeAllRanges();
-          window.getSelection().addRange(range);
-        }
+      getTrades() {
+        console.log("getTrades");
+        //get trades through api with cors
+        axios
+          .get("http://localhost:3000/trades")
+          .then((response) => {
+            console.log(response);
+            this.trades = response.data;
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       },
 
-      copyText() {
-        this.selectText(this.$refs.text); // e.g. <div ref="text">
-        console.log(this.$refs.text);
-        document.execCommand("copy");
+      closePending(trade) {
+        console.log(trade.id);
+        //axios delete
+        axios
+          .delete(`http://localhost:3000/trades/${trade.id}`)
+          .then((response) => {
+            console.log(response);
+            console.log("deleted");
+            this.getTrades();
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       },
 
       format() {
@@ -197,37 +237,51 @@
           this.direction
         );
 
-        this.trades.push({
-          symbol: this.symbol,
-          entryPrice: this.entryPrice,
-          stopLoss: this.stopLoss,
-          direction: this.direction,
-        });
+        // this.trades.push({
+        //   symbol: this.symbol,
+        //   entryPrice: this.entryPrice,
+        //   stopLoss: this.stopLoss,
+        //   direction: this.direction,
+        // });
 
         this.finalNumbers = [];
 
-        //send data through axios
         axios
-          .post(
-            "https://api.telegram.org/bot" +
-              this.token +
-              "/sendMessage?chat_id=" +
-              this.chat_id +
-              "&text=" +
-              this.symbol +
-              "%0a" +
-              this.direction +
-              "%0a" +
-              this.entryPrice +
-              "%0a" +
-              this.stopLoss
-          )
-          .then(function (response) {
-            console.log(response);
+          .post("http://localhost:3000/trades", {
+            symbol: this.symbol,
+            entryPrice: this.entryPrice,
+            stopLoss: this.stopLoss,
+            direction: this.direction,
+          })
+          .then((response) => {
+            this.getTrades();
           })
           .catch(function (error) {
             console.log(error);
           });
+
+        //send data through axios
+        // axios
+        //   .post(
+        //     "https://api.telegram.org/bot" +
+        //       this.token +
+        //       "/sendMessage?chat_id=" +
+        //       this.chat_id +
+        //       "&text=" +
+        //       this.symbol +
+        //       "%0a" +
+        //       this.direction +
+        //       "%0a" +
+        //       this.entryPrice +
+        //       "%0a" +
+        //       this.stopLoss
+        //   )
+        //   .then(function (response) {
+        //     console.log(response);
+        //   })
+        //   .catch(function (error) {
+        //     console.log(error);
+        //   });
       },
     },
   };
