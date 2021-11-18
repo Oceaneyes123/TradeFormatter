@@ -2,19 +2,39 @@
   <v-app>
     <v-container class="fill-height">
       <v-row justify="center">
-        <v-col cols="10" md="5" class="d-flex flex-column">
-          <div>
+        <v-col cols="10" md="5">
+          <div class="mb-2">
             Lets buy Eurjpy @129.961 - 129.761 TP 1 : 130.161 TP 2 : 130.361
             SL❗️ 129.361
           </div>
+          <div class="mb-2">
+            GOLD SELL NOW @ 1860.50-1862.50 sl @ 1864.50 tp 1 : 1858.50 tp 2 :
+            1855.50 tp 3 : 1850.50
+          </div>
+          <div class="mb-2">
+            AUDNZD SELL SL 1.04700 (25 pips) TP1 1.04300 (20 pips) TP2 1.04100
+            (40 pips) TP3 1.03900 (60 pips) TP4 1.03500 (100 pips)
+          </div>
+          <div class="mb-6">
+            EURAUD BUY NOW @ 1.55250- @ 1.55000 TP 1 : 1.55450 TP 2 : 1.55750 TP
+            3 : 1.56250 TP 4 : HOLD SL : 1.54800 Use suitable lot sizes based on
+            your capital. Money management is key.
+          </div>
+
           <div class="headline font-weight-bold blue--text mb-5 text-center">
             TRADE FORMATTER
           </div>
-          <v-textarea outlined v-model="message"></v-textarea>
-          <v-btn color="primary" class="mx-auto" @click="format()"
-            >Format</v-btn
-          >
-          <v-card
+          <v-textarea outlined v-model="message" class="mb-7"></v-textarea>
+          <div class="d-flex justify-center">
+            <v-btn
+              @click="recover = true"
+              :color="recover ? 'green' : ''"
+              class="mr-2"
+              >RECOVER</v-btn
+            >
+            <v-btn color="primary" class="ml-2" @click="format()">Format</v-btn>
+          </div>
+          <!-- <v-card
             class="pa-5"
             color="blue lighten-3 mt-7 rounded-xl"
             flat
@@ -27,11 +47,11 @@
           </v-card>
           <v-btn color="primary" class="mx-auto mt-5" @click="copyText()"
             >COPY</v-btn
-          >
+          > -->
         </v-col>
         <v-col cols="10" md="5">
           <v-card
-            color="teal accent-2"
+            color="blue lighten-5"
             class="pa-5"
             max-height="500"
             style="overflow-y: scroll"
@@ -47,17 +67,31 @@
                           <div>{{ trade.direction }}</div>
                           <div>{{ trade.entryPrice }}</div>
                           <div>{{ trade.stopLoss }}</div>
+                          <div>{{ trade.recover }}</div>
                         </div>
                       </v-card>
                     </v-col>
                     <v-col class="d-flex flex-column">
-                      <v-btn class="mb-2"> HALF </v-btn>
-                      <v-btn class="mb-2"> TAKE PROFIT </v-btn>
-                      <v-btn class="mb-2" @click="closePending(trade)">
+                      <v-btn class="mb-2" color="blue lighten-1"> HALF </v-btn>
+                      <v-btn class="mb-2" color="teal lighten-3">
+                        TAKE PROFIT
+                      </v-btn>
+                      <v-btn class="mb-2" color="yellow lighten-3">
+                        BREAKEVEN
+                      </v-btn>
+                      <v-btn
+                        class="mb-2"
+                        color="orange lighten-3"
+                        @click="closePending(trade)"
+                      >
                         CLOSE PENDING
                       </v-btn>
-                      <v-btn class="mb-2"> CUTLOSS </v-btn>
-                      <v-btn class="mb-2"> REOPEN </v-btn>
+                      <v-btn class="mb-2" color="red lighten-1">
+                        CUTLOSS
+                      </v-btn>
+                      <v-btn class="mb-2" color="green darken-1">
+                        REOPEN
+                      </v-btn>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -122,6 +156,11 @@
       finalNumbers: [],
       trades: [],
       deleteRefreshKey: 0,
+
+      recover: false,
+
+      // baseApiUrl: "http://localhost:3000/trades",
+      baseApiUrl: "https://trade-api.vercel.app/trades",
     }),
 
     mounted() {
@@ -131,9 +170,8 @@
     methods: {
       getTrades() {
         console.log("getTrades");
-        //get trades through api with cors
         axios
-          .get("http://localhost:3000/trades")
+          .get(this.baseApiUrl + "/all")
           .then((response) => {
             console.log(response);
             this.trades = response.data;
@@ -147,7 +185,7 @@
         console.log(trade.id);
         //axios delete
         axios
-          .delete(`http://localhost:3000/trades/${trade.id}`)
+          .delete(`${this.baseApiUrl}/${trade.id}`)
           .then((response) => {
             console.log(response);
             console.log("deleted");
@@ -156,6 +194,9 @@
           .catch((error) => {
             console.log(error);
           });
+
+        //remove trade from trades
+        //  this.trades.splice(i, 1)
       },
 
       format() {
@@ -246,15 +287,23 @@
 
         this.finalNumbers = [];
 
+        // axios.post(this.baseApiUrl, "HI").then((response) => {
+        //   console.log(response);
+        // }).catch((error) => {
+        //   console.log(error);
+        // });
+
         axios
-          .post("http://localhost:3000/trades", {
+          .post(this.baseApiUrl, {
             symbol: this.symbol,
             entryPrice: this.entryPrice,
             stopLoss: this.stopLoss,
             direction: this.direction,
+            recover: this.recover,
           })
           .then((response) => {
             this.getTrades();
+            this.recover = false;
           })
           .catch(function (error) {
             console.log(error);
