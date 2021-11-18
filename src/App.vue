@@ -60,7 +60,7 @@
               <div v-for="(trade, i) in trades" :key="i">
                 <v-container>
                   <v-row>
-                    <v-col col="5">
+                    <v-col col="5" class="d-flex flex-column">
                       <v-card width="100%" class="pa-5 mb-3 d-flex">
                         <div>
                           <div>{{ trade.symbol }}</div>
@@ -70,23 +70,48 @@
                           <div>{{ trade.recover }}</div>
                         </div>
                       </v-card>
+                      <v-btn
+                        class="mb-2 mx-auto white--text"
+                        color="red darken-1"
+                        @click="deleteTrade(trade)"
+                      >
+                        DELETE
+                      </v-btn>
                     </v-col>
                     <v-col class="d-flex flex-column">
-                      <v-btn class="mb-2" color="blue lighten-1"> HALF </v-btn>
-                      <v-btn class="mb-2" color="teal lighten-3">
+                      <v-btn
+                        class="mb-2"
+                        color="blue lighten-1"
+                        @click="performCommand('HALF', trade)"
+                      >
+                        HALF
+                      </v-btn>
+                      <v-btn
+                        class="mb-2"
+                        color="teal lighten-3"
+                        @click="performCommand('TAKE PROFIT', trade)"
+                      >
                         TAKE PROFIT
                       </v-btn>
-                      <v-btn class="mb-2" color="yellow lighten-3">
+                      <v-btn
+                        class="mb-2"
+                        color="yellow lighten-3"
+                        @click="performCommand('BREAKEVEN', trade)"
+                      >
                         BREAKEVEN
                       </v-btn>
                       <v-btn
                         class="mb-2"
                         color="orange lighten-3"
-                        @click="closePending(trade)"
+                        @click="performCommand('CLOSE', trade)"
                       >
                         CLOSE PENDING
                       </v-btn>
-                      <v-btn class="mb-2" color="red lighten-1">
+                      <v-btn
+                        class="mb-2"
+                        color="red lighten-1"
+                        @click="performCommand('CUTLOSS', trade)"
+                      >
                         CUTLOSS
                       </v-btn>
                       <v-btn class="mb-2" color="green darken-1">
@@ -174,14 +199,20 @@
           .get(this.baseApiUrl + "/all")
           .then((response) => {
             console.log(response);
-            this.trades = response.data;
+            this.trades = [];
+            //loop through response and add to trades array
+            for (let i = 0; i < response.data.length; i++) {
+              if ("recover" in response.data[i]) {
+                this.trades.push(response.data[i]);
+              }
+            }
           })
           .catch((error) => {
             console.log(error);
           });
       },
 
-      closePending(trade) {
+      deleteTrade(trade) {
         console.log(trade.id);
         //axios delete
         axios
@@ -197,6 +228,24 @@
 
         //remove trade from trades
         //  this.trades.splice(i, 1)
+      },
+
+      performCommand(command, trade) {
+        console.log("sending");
+        const { symbol, direction } = trade;
+        //axios post to close pending
+        axios
+          .post(this.baseApiUrl, {
+            command: command,
+            direction: direction,
+            symbol: symbol,
+          })
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       },
 
       format() {
