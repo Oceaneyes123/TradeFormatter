@@ -3,24 +3,15 @@
     <v-container class="fill-height">
       <v-row justify="center">
         <v-col cols="10" md="5">
-          <div class="mb-2">
-            Lets buy Eurjpy @129.961 - 129.761 TP 1 : 130.161 TP 2 : 130.361
-            SL❗️ 129.361
-          </div>
-          <div class="mb-2">
-            GOLD SELL NOW @ 1860.50-1862.50 sl @ 1864.50 tp 1 : 1858.50 tp 2 :
-            1855.50 tp 3 : 1850.50
-          </div>
-          <div class="mb-2">
-            AUDNZD SELL SL 1.04700 (25 pips) TP1 1.04300 (20 pips) TP2 1.04100
-            (40 pips) TP3 1.03900 (60 pips) TP4 1.03500 (100 pips)
-          </div>
-          <div class="mb-6">
-            EURAUD BUY NOW @ 1.55250- @ 1.55000 TP 1 : 1.55450 TP 2 : 1.55750 TP
-            3 : 1.56250 TP 4 : HOLD SL : 1.54800 Use suitable lot sizes based on
-            your capital. Money management is key.
-          </div>
-
+          <v-card class="mb-2 pa-5">
+            Notes:
+            <div>1. It's OKAY to have LOSS. Just RECOVER.</div>
+            <div>
+              2. Respect SL and TP. Wait for the Price to hit either SL or TP.
+            </div>
+            <div>3. Don't trade on News</div>
+            <div>4. Don't Overtrade</div>
+          </v-card>
           <div class="headline font-weight-bold blue--text mb-5 text-center">
             TRADE FORMATTER
           </div>
@@ -56,11 +47,14 @@
             max-height="500"
             style="overflow-y: scroll"
           >
+            <v-snackbar v-model="snackbar">
+              {{ snackbarText }}
+            </v-snackbar>
             <div :key="deleteRefreshKey">
               <div v-for="(trade, i) in trades" :key="i">
                 <v-container>
                   <v-row>
-                    <v-col col="5" class="d-flex flex-column">
+                    <v-col cols="12" md="6" class="d-flex flex-column">
                       <v-card width="100%" class="pa-5 mb-3 d-flex">
                         <div>
                           <div>{{ trade.symbol }}</div>
@@ -78,7 +72,7 @@
                         DELETE
                       </v-btn>
                     </v-col>
-                    <v-col class="d-flex flex-column">
+                    <v-col cols="12" md="6" class="d-flex flex-column">
                       <v-btn
                         class="mb-2"
                         color="blue lighten-1"
@@ -160,7 +154,6 @@
         "GBPCAD",
         "GBPCHF",
         "GBPJPY",
-        "GBPNZD",
         "GBPUSD",
         "NZDCAD",
         "NZDJPY",
@@ -183,13 +176,26 @@
       deleteRefreshKey: 0,
 
       recover: false,
+      snackbar: false,
+      snackbarText: "",
 
-      // baseApiUrl: "http://localhost:3000/trades",
-      baseApiUrl: "https://trade-api.vercel.app/trades",
+      baseApiUrl: "http://localhost:3000/trades",
+      // baseApiUrl: "https://trade-api.vercel.app/trades",
     }),
 
     mounted() {
       this.getTrades();
+
+      var date1 = new Date();
+      var date2 = new Date(2021, 10, 19, 17, 0, 0);
+
+      //check distance between 2 dates
+      var distance = date2.getTime() - date1.getTime();
+
+      //convert to hours
+      var hours = Math.floor(distance / (1000 * 60 * 60));
+
+      console.log(date1, date2, hours);
     },
 
     methods: {
@@ -342,21 +348,43 @@
         //   console.log(error);
         // });
 
-        axios
-          .post(this.baseApiUrl, {
-            symbol: this.symbol,
-            entryPrice: this.entryPrice,
-            stopLoss: this.stopLoss,
-            direction: this.direction,
-            recover: this.recover,
-          })
-          .then((response) => {
-            this.getTrades();
-            this.recover = false;
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
+        var isDuplicate = false;
+
+        for (let i = 0; i < this.trades.length; i++) {
+          if (
+            this.trades[i].symbol == this.symbol &&
+            this.trades[i].direction == this.direction
+          ) {
+            console.log(this.trades[i].symbol);
+            isDuplicate = true;
+            this.snackbarText =
+              "Existing Trade, Wait for SL or TP / Symbol not Present";
+            this.snackbar = true;
+          }
+        }
+
+        console.log(isDuplicate);
+
+        if (!isDuplicate) {
+          axios
+            .post(this.baseApiUrl, {
+              symbol: this.symbol,
+              entryPrice: this.entryPrice,
+              stopLoss: this.stopLoss,
+              direction: this.direction,
+              recover: this.recover,
+            })
+            .then((response) => {
+              this.getTrades();
+              this.recover = false;
+              this.message = "";
+              this.snackbarText = "Pending order added on " + this.symbol;
+              this.snackbar = true;
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        }
 
         //send data through axios
         // axios
