@@ -3,7 +3,7 @@
     <v-container class="fill-height">
       <v-row justify="center">
         <v-col cols="10">
-          <v-card class="pa-5">
+          <v-card class="pa-5" v-if="haveNews">
             Upcoming/Ongoing News:
             {{ this.newsSymbol }} on {{ this.newsTime }}
           </v-card>
@@ -182,6 +182,7 @@
       news: [],
       deleteRefreshKey: 0,
       isNewsNear: false,
+      haveNews: false,
       newsSymbol: "",
       newsTime: "",
 
@@ -226,27 +227,20 @@
           .then((response) => {
             this.news = response.data;
 
-            this.news.push({
-              symbol: "EUR",
-              year: 2021,
-              month: 10,
-              day: 21,
-              hour: 20,
-              minute: 10,
-            });
-
             for (let i = 0; i < this.news.length; i++) {
               let { symbol, year, month, day, hour, minute } = this.news[i];
               var date1 = new Date();
               var date2 = new Date(year, month - 1, day, hour, minute, 0);
-
+              console.log(date2);
               //check distance between 2 dates
               var distance = date2.getTime() - date1.getTime();
 
               //convert to hours
               var hours = Math.floor(distance / (1000 * 60 * 60));
-
-              if (hours <= 1) {
+              console.log(hours);
+              if (hours <= 1 && hours >= -1) {
+                console.log("news near");
+                this.haveNews = true;
                 this.newsSymbol = symbol;
                 var determiner = hour > 11 ? "PM" : "AM";
                 hour = hour > 12 ? hour - 12 : hour;
