@@ -231,7 +231,6 @@
               let { symbol, year, month, day, hour, minute } = this.news[i];
               var date1 = new Date();
               var date2 = new Date(year, month - 1, day, hour, minute, 0);
-              console.log(date2);
               //check distance between 2 dates
               var distance = date2.getTime() - date1.getTime();
 
