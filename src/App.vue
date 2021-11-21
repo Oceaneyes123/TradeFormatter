@@ -2,6 +2,12 @@
   <v-app>
     <v-container class="fill-height">
       <v-row justify="center">
+        <v-col cols="10">
+          <v-card class="pa-5">
+            Upcoming/Ongoing News:
+            {{ this.newsSymbol }} on {{ this.newsTime }}
+          </v-card>
+        </v-col>
         <v-col cols="10" md="5">
           <v-card class="mb-2 pa-5">
             Notes:
@@ -173,29 +179,24 @@
       entryPrice: 0,
       finalNumbers: [],
       trades: [],
+      news: [],
       deleteRefreshKey: 0,
+      isNewsNear: false,
+      newsSymbol: "",
+      newsTime: "",
 
       recover: false,
       snackbar: false,
       snackbarText: "",
 
       baseApiUrl: "http://localhost:3000/trades",
-      // baseApiUrl: "https://trade-api.vercel.app/trades",
+      // baseApiUrl: "https://tradefx-api.herokuapp.com/trades",
     }),
 
     mounted() {
       this.getTrades();
 
-      var date1 = new Date();
-      var date2 = new Date(2021, 10, 19, 17, 0, 0);
-
-      //check distance between 2 dates
-      var distance = date2.getTime() - date1.getTime();
-
-      //convert to hours
-      var hours = Math.floor(distance / (1000 * 60 * 60));
-
-      console.log(date1, date2, hours);
+      this.getNews();
     },
 
     methods: {
@@ -210,6 +211,49 @@
             for (let i = 0; i < response.data.length; i++) {
               if ("recover" in response.data[i]) {
                 this.trades.push(response.data[i]);
+              }
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      },
+
+      getNews() {
+        console.log("getNews");
+        axios
+          .get(this.baseApiUrl + "/news")
+          .then((response) => {
+            this.news = response.data;
+
+            this.news.push({
+              symbol: "EUR",
+              year: 2021,
+              month: 10,
+              day: 21,
+              hour: 20,
+              minute: 10,
+            });
+
+            for (let i = 0; i < this.news.length; i++) {
+              let { symbol, year, month, day, hour, minute } = this.news[i];
+              var date1 = new Date();
+              var date2 = new Date(year, month - 1, day, hour, minute, 0);
+
+              //check distance between 2 dates
+              var distance = date2.getTime() - date1.getTime();
+
+              //convert to hours
+              var hours = Math.floor(distance / (1000 * 60 * 60));
+
+              if (hours <= 1) {
+                this.newsSymbol = symbol;
+                var determiner = hour > 11 ? "PM" : "AM";
+                hour = hour > 12 ? hour - 12 : hour;
+                minute = minute == 0 ? minute + "0" : minute;
+                this.newsTime = `${
+                  hour > 12 ? hour - 12 : hour
+                }:${minute} ${determiner}`;
               }
             }
           })
@@ -362,10 +406,30 @@
             this.snackbar = true;
           }
         }
+        //loop through news
+        for (let i = 0; i < this.news.length; i++) {
+          if (this.symbol.includes(this.news[i].symbol)) {
+            let { year, month, day, hour, minute } = this.news[i];
 
-        console.log(isDuplicate);
+            var date1 = new Date();
+            var date2 = new Date(year, month - 1, day, hour, minute, 0);
 
-        if (!isDuplicate) {
+            //check distance between 2 dates
+            var distance = date2.getTime() - date1.getTime();
+
+            //convert to hours
+            var hours = Math.floor(distance / (1000 * 60 * 60));
+            console.log(date2, "hours ", hours);
+            console.log(hours <= 1, hours);
+            if (hours <= 1) {
+              this.isNewsNear = true;
+              this.snackbarText = "Trade is near the news";
+              this.snackbar = true;
+            }
+          }
+        }
+
+        if (!isDuplicate && !this.isNewsNear) {
           axios
             .post(this.baseApiUrl, {
               symbol: this.symbol,
@@ -384,6 +448,9 @@
             .catch(function (error) {
               console.log(error);
             });
+        } else {
+          this.isDuplicate = false;
+          this.isNewsNear = false;
         }
 
         //send data through axios
