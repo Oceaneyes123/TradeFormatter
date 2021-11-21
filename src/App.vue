@@ -190,8 +190,8 @@
       snackbar: false,
       snackbarText: "",
 
-      baseApiUrl: "http://localhost:3000/trades",
-      // baseApiUrl: "https://tradefx-api.herokuapp.com/trades",
+      // baseApiUrl: "http://localhost:3000/trades",
+      baseApiUrl: "https://tradefx-api.herokuapp.com/trades",
     }),
 
     mounted() {
@@ -237,7 +237,6 @@
 
               //convert to hours
               var hours = Math.floor(distance / (1000 * 60 * 60));
-              console.log(hours);
               if (hours <= 1 && hours >= -1) {
                 console.log("news near");
                 this.haveNews = true;
