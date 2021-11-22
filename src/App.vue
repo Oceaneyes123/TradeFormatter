@@ -329,12 +329,7 @@
 
         if (this.symbol == "xauusd" || this.symbol == "gold") {
           for (var x = 0; x < numbers.length; x++) {
-            if (
-              numbers[x] != 1 &&
-              numbers[x] != 2 &&
-              numbers[x] != 3 &&
-              numbers[x] != 4
-            ) {
+            if (numbers[x] > 100) {
               this.finalNumbers.push(numbers[x]);
             }
           }
