@@ -124,6 +124,9 @@
               </div>
             </div>
           </v-card>
+          <div class="d-flex justify-center">
+            <v-btn color="red" class="mt-5 white--text" @click="resetDB()">RESET DATABASE</v-btn>
+          </div>
         </v-col>
       </v-row>
     </v-container>
@@ -190,8 +193,8 @@
       snackbar: false,
       snackbarText: "",
 
-      // baseApiUrl: "http://localhost:3000/trades",
-      baseApiUrl: "https://tradefx-api.herokuapp.com/trades",
+       baseApiUrl: "http://localhost:3000/trades",
+     // baseApiUrl: "https://tradefx-api.herokuapp.com/trades",
     }),
 
     mounted() {
@@ -236,8 +239,8 @@
 
               //convert to hours
               var hours = Math.floor(distance / (1000 * 60 * 60));
-              if (hours <= 1 && hours >= -1) {
-                console.log("news near");
+              if (hours <= 1 && hours >= -1) {  
+               
                 this.haveNews = true;
                 this.newsSymbol = symbol;
                 var determiner = hour > 11 ? "PM" : "AM";
@@ -413,7 +416,7 @@
             var hours = Math.floor(distance / (1000 * 60 * 60));
             console.log(date2, "hours ", hours);
             console.log(hours <= 1, hours);
-            if (hours <= 1) {
+            if (hours <= 1 && hours >= -1) {
               this.isNewsNear = true;
               this.snackbarText = "Trade is near the news";
               this.snackbar = true;
@@ -444,6 +447,7 @@
           this.isDuplicate = false;
           this.isNewsNear = false;
         }
+        
 
         //send data through axios
         // axios
@@ -467,6 +471,18 @@
         //   .catch(function (error) {
         //     console.log(error);
         //   });
+      },
+
+
+      resetDB() {
+        axios
+          .get(this.baseApiUrl + "/reset")
+          .then((response) => {
+            console.log(response);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
       },
     },
   };
