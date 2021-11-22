@@ -193,8 +193,8 @@
       snackbar: false,
       snackbarText: "",
 
-       baseApiUrl: "http://localhost:3000/trades",
-     // baseApiUrl: "https://tradefx-api.herokuapp.com/trades",
+      // baseApiUrl: "http://localhost:3000/trades",
+      baseApiUrl: "https://tradefx-api.herokuapp.com/trades",
     }),
 
     mounted() {
