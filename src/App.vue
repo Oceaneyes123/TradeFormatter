@@ -56,7 +56,80 @@
             <v-snackbar v-model="snackbar">
               {{ snackbarText }}
             </v-snackbar>
-            <div :key="deleteRefreshKey">
+
+            <v-expansion-panels>
+              <v-expansion-panel v-for="(trade, i) in trades" :key="i">
+                <v-expansion-panel-header>
+                  {{ trade.symbol }} {{ trade.direction }}
+                </v-expansion-panel-header>
+                <v-expansion-panel-content>
+                  <v-container>
+                    <v-row>
+                      <v-col cols="12" md="6" class="d-flex flex-column">
+                        <v-card width="100%" class="pa-5 mb-3 d-flex">
+                          <div>
+                            <div>{{ trade.symbol }}</div>
+                            <div>{{ trade.direction }}</div>
+                            <div>{{ trade.entryPrice }}</div>
+                            <div>{{ trade.stopLoss }}</div>
+                            <div>{{ trade.recover }}</div>
+                          </div>
+                        </v-card>
+                        <v-btn
+                          class="mb-2 mx-auto white--text"
+                          color="red darken-1"
+                          @click="deleteTrade(trade)"
+                        >
+                          DELETE
+                        </v-btn>
+                      </v-col>
+                      <v-col cols="12" md="6" class="d-flex flex-column">
+                        <v-btn
+                          class="mb-2"
+                          color="blue lighten-1"
+                          @click="performCommand('HALF', trade)"
+                        >
+                          HALF
+                        </v-btn>
+                        <v-btn
+                          class="mb-2"
+                          color="teal lighten-3"
+                          @click="performCommand('TAKE PROFIT', trade)"
+                        >
+                          TAKE PROFIT
+                        </v-btn>
+                        <v-btn
+                          class="mb-2"
+                          color="yellow lighten-3"
+                          @click="performCommand('BREAKEVEN', trade)"
+                        >
+                          BREAKEVEN
+                        </v-btn>
+                        <v-btn
+                          class="mb-2"
+                          color="orange lighten-3"
+                          @click="performCommand('CLOSE', trade)"
+                        >
+                          CLOSE PENDING
+                        </v-btn>
+                        <v-btn
+                          class="mb-2"
+                          color="red lighten-1"
+                          @click="performCommand('CUTLOSS', trade)"
+                        >
+                          CUTLOSS
+                        </v-btn>
+                        <v-btn class="mb-2" color="green darken-1">
+                          REOPEN
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-expansion-panel-content>
+              </v-expansion-panel>
+            </v-expansion-panels>
+
+            <!-- <div :key="deleteRefreshKey">
               <div v-for="(trade, i) in trades" :key="i">
                 <v-container>
                   <v-row>
@@ -122,10 +195,12 @@
                 </v-container>
                 <v-divider></v-divider>
               </div>
-            </div>
+            </div> -->
           </v-card>
           <div class="d-flex justify-center">
-            <v-btn color="red" class="mt-5 white--text" @click="resetDB()">RESET DATABASE</v-btn>
+            <v-btn color="red" class="mt-5 white--text" @click="resetDB()"
+              >RESET DATABASE</v-btn
+            >
           </div>
         </v-col>
       </v-row>
@@ -239,8 +314,7 @@
 
               //convert to hours
               var hours = Math.floor(distance / (1000 * 60 * 60));
-              if (hours <= 1 && hours >= -1) {  
-               
+              if (hours <= 1 && hours >= -1) {
                 this.haveNews = true;
                 this.newsSymbol = symbol;
                 var determiner = hour > 11 ? "PM" : "AM";
@@ -442,7 +516,6 @@
           this.isDuplicate = false;
           this.isNewsNear = false;
         }
-        
 
         //send data through axios
         // axios
@@ -467,7 +540,6 @@
         //     console.log(error);
         //   });
       },
-
 
       resetDB() {
         axios
