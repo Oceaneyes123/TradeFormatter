@@ -2,6 +2,20 @@
   <v-app>
     <v-container class="fill-height">
       <v-row justify="center">
+        <v-col cols="10" class="d-flex justify-center">
+          <v-btn
+            :color="isCheckingNotification ? 'red' : 'green'"
+            class="white--text"
+            @click="
+              (isCheckingNotification = !isCheckingNotification),
+                checkNotification()
+            "
+          >
+            <span
+              v-html="isCheckingNotification ? 'Stop' : 'Check Notification'"
+            ></span>
+          </v-btn>
+        </v-col>
         <v-col cols="10">
           <v-card class="pa-5" v-if="haveNews">
             Upcoming/Ongoing News:
@@ -119,7 +133,11 @@
                         >
                           CUTLOSS
                         </v-btn>
-                        <v-btn class="mb-2" color="green darken-1">
+                        <v-btn
+                          class="mb-2"
+                          color="green darken-1"
+                          @click="reEnter(trade)"
+                        >
                           REOPEN
                         </v-btn>
                       </v-col>
@@ -268,8 +286,13 @@
       snackbar: false,
       snackbarText: "",
 
-      // baseApiUrl: "http://localhost:3000/trades",
-      baseApiUrl: "https://tradefx-api.herokuapp.com/trades",
+      fromNotification: false,
+      isCheckingNotification: false,
+
+      interval: null,
+
+     // baseApiUrl: "http://localhost:3000",
+       baseApiUrl: "https://tradefx-api.herokuapp.com",
     }),
 
     mounted() {
@@ -279,10 +302,26 @@
     },
 
     methods: {
+      checkNotification() {
+        if (this.isCheckingNotification) {
+          console.log("opening");
+          this.interval = setInterval(() => {
+            axios.get(this.baseApiUrl + "/notification").then((response) => {
+              this.onNotification(response.data);
+            });
+          }, 2000);
+          console.log("opened");
+        } else {
+          console.log("should clear interval");
+          console.log(this.interval);
+          clearInterval(this.interval);
+        }
+      },
+
       getTrades() {
         console.log("getTrades");
         axios
-          .get(this.baseApiUrl + "/all")
+          .get(this.baseApiUrl + "/trades/all")
           .then((response) => {
             console.log(response);
             this.trades = [];
@@ -301,7 +340,7 @@
       getNews() {
         console.log("getNews");
         axios
-          .get(this.baseApiUrl + "/news")
+          .get(this.baseApiUrl + "/trades/news")
           .then((response) => {
             this.news = response.data;
 
@@ -335,7 +374,7 @@
         console.log(trade.id);
         //axios delete
         axios
-          .delete(`${this.baseApiUrl}/${trade.id}`)
+          .delete(`${this.baseApiUrl}/trades/${trade.id}`)
           .then((response) => {
             console.log(response);
             console.log("deleted");
@@ -354,7 +393,7 @@
         const { symbol, direction } = trade;
         //axios post to close pending
         axios
-          .post(this.baseApiUrl, {
+          .post(this.baseApiUrl + "/trades", {
             command: command,
             direction: direction,
             symbol: symbol,
@@ -369,6 +408,7 @@
 
       format() {
         this.sentence = this.message;
+
         for (var i = 0; i < this.list_of_symbols.length; i++) {
           var tempSymbol = this.list_of_symbols[i];
 
@@ -495,7 +535,7 @@
 
         if (!isDuplicate && !this.isNewsNear) {
           axios
-            .post(this.baseApiUrl, {
+            .post(this.baseApiUrl + "/trades", {
               symbol: this.symbol,
               entryPrice: this.entryPrice,
               stopLoss: this.stopLoss,
@@ -541,15 +581,199 @@
         //   });
       },
 
+      reEnter(trade) {
+        const { symbol, entryPrice, direction, stopLoss, recover } = trade;
+        axios
+          .post(this.baseApiUrl + "/trades", {
+            symbol: symbol,
+            entryPrice: entryPrice,
+            stopLoss: stopLoss,
+            direction: direction,
+            recover: recover,
+          })
+          .then((response) => {
+            this.getTrades();
+            this.recover = false;
+            this.message = "";
+            this.snackbarText = "Pending order added on " + this.symbol;
+            this.snackbar = true;
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      },
+
       resetDB() {
         axios
-          .get(this.baseApiUrl + "/reset")
+          .get(this.baseApiUrl + "/trades/reset")
           .then((response) => {
             console.log(response);
           })
           .catch(function (error) {
             console.log(error);
           });
+      },
+
+      onNotification(notification) {
+        console.log(notification);
+        var sentence = this.sentence.toLowerCase()
+        if (!(this.sentence == notification) && !this.sentence.includes('hit')) {
+          console.log("notification", notification);
+          this.sentence = notification;
+
+          this.entryPrice = 0;
+          this.stopLoss = 0;
+
+          for (var i = 0; i < this.list_of_symbols.length; i++) {
+            var tempSymbol = this.list_of_symbols[i];
+
+            //tempsymbol to lower case
+            tempSymbol = tempSymbol.toLowerCase();
+
+            //if tempSymbol is present in the sentence, set symbol to tempSymbol
+            if (this.sentence.toLowerCase().includes(tempSymbol)) {
+              this.symbol = tempSymbol;
+            }
+          }
+
+          var numbers = this.sentence.match(/\d+\.?\d*/g);
+
+          if (this.sentence.toLowerCase().includes("buy")) {
+            this.direction = "buy";
+          } else if (this.sentence.toLowerCase().includes("sell")) {
+            this.direction = "sell";
+          }
+
+          if (this.direction == "buy") {
+            numbers.sort(function (a, b) {
+              return a - b;
+            });
+          } else {
+            numbers.sort(function (a, b) {
+              return b - a;
+            });
+          }
+
+          console.log(numbers);
+
+          if (this.symbol == "xauusd" || this.symbol == "gold") {
+            for (var x = 0; x < numbers.length; x++) {
+              if (numbers[x] > 100) {
+                this.finalNumbers.push(numbers[x]);
+              }
+            }
+          } else {
+            for (var b = 0; b < numbers.length; b++) {
+              if (numbers[b].includes(".")) {
+                this.finalNumbers.push(numbers[b]);
+              }
+            }
+          }
+
+          this.stopLoss = this.finalNumbers[0];
+
+          //check if sentence contains dash
+          if (this.sentence.toLowerCase().includes("-")) {
+            this.entryPrice = this.finalNumbers[2];
+          } else {
+            this.entryPrice = this.finalNumbers[1];
+          }
+
+          this.symbol = this.symbol.toUpperCase();
+
+          //if symbol is XAUUSD change to GOLD
+          if (this.symbol == "XAUUSD") {
+            this.symbol = "GOLD";
+          }
+
+          //direction to upper case
+          this.direction = this.direction.toUpperCase();
+
+          console.log(
+            this.symbol,
+            this.entryPrice,
+            this.stopLoss,
+            this.direction
+          );
+
+          // this.trades.push({
+          //   symbol: this.symbol,
+          //   entryPrice: this.entryPrice,
+          //   stopLoss: this.stopLoss,
+          //   direction: this.direction,
+          // });
+
+          this.finalNumbers = [];
+
+          // axios.post(this.baseApiUrl, "HI").then((response) => {
+          //   console.log(response);
+          // }).catch((error) => {
+          //   console.log(error);
+          // });
+
+          var isDuplicate = false;
+
+          for (let i = 0; i < this.trades.length; i++) {
+            if (
+              this.trades[i].symbol == this.symbol &&
+              this.trades[i].direction == this.direction
+            ) {
+              console.log(this.trades[i].symbol);
+              isDuplicate = true;
+              this.snackbarText =
+                "Existing Trade, Wait for SL or TP / Symbol not Present";
+              this.snackbar = true;
+            }
+          }
+          //loop through news
+          for (let i = 0; i < this.news.length; i++) {
+            if (this.symbol.includes(this.news[i].symbol)) {
+              let { year, month, day, hour, minute } = this.news[i];
+
+              var date1 = new Date();
+              var date2 = new Date(year, month - 1, day, hour, minute, 0);
+
+              //check distance between 2 dates
+              var distance = date2.getTime() - date1.getTime();
+
+              //convert to hours
+              var hours = Math.floor(distance / (1000 * 60 * 60));
+              console.log(date2, "hours ", hours);
+              console.log(hours <= 1, hours);
+              if (hours <= 1 && hours >= -1) {
+                this.isNewsNear = true;
+                this.snackbarText = "Trade is near the news";
+                this.snackbar = true;
+              }
+            }
+          }
+
+          if (!isDuplicate && !this.isNewsNear && this.entryPrice != undefined && this.stopLoss != undefined) {
+            axios
+              .post(this.baseApiUrl + "/trades", {
+                symbol: this.symbol,
+                entryPrice: this.entryPrice,
+                stopLoss: this.stopLoss,
+                direction: this.direction,
+                recover: this.recover,
+              })
+              .then((response) => {
+                this.getTrades();
+                this.recover = false;
+                this.snackbarText = "Pending order added on " + this.symbol;
+                this.snackbar = true;
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+          } else {
+            this.isDuplicate = false;
+            this.isNewsNear = false;
+          }
+        } else {
+          this.snackbarText = "Same Notification";
+          this.snackbar = true;
+        }
       },
     },
   };
