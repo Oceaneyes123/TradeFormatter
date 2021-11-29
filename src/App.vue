@@ -22,7 +22,7 @@
             {{ this.newsSymbol }} on {{ this.newsTime }}
           </v-card>
         </v-col>
-        <v-col cols="10" md="5">
+        <v-col cols="10" md="4">
           <v-card class="mb-2 pa-5">
             Notes:
             <div>1. It's OKAY to have LOSS. Just RECOVER.</div>
@@ -45,32 +45,48 @@
             >
             <v-btn color="primary" class="ml-2" @click="format()">Format</v-btn>
           </div>
-          <!-- <v-card
-            class="pa-5"
-            color="blue lighten-3 mt-7 rounded-xl"
-            flat
-            ref="text"
-          >
-            <div>{{ symbol }}</div>
-            <div>{{ direction }}</div>
-            <div>{{ entryPrice }}</div>
-            <div>{{ stopLoss }}</div>
-          </v-card>
-          <v-btn color="primary" class="mx-auto mt-5" @click="copyText()"
-            >COPY</v-btn
-          > -->
         </v-col>
-        <v-col cols="10" md="5">
+
+        <v-col cols="10" md="4">
+          <v-card class="pa-5">
+            <div>NOTIFICATIONS:</div>
+            <v-expansion-panels>
+              <v-expansion-panel
+                v-for="(notification, i) in notificationList"
+                :key="i"
+              >
+                <v-expansion-panel-header>
+                  {{ notification }}
+                </v-expansion-panel-header>
+                <v-expansion-panel-content>
+                  <div class="d-flex justify-end">
+                    <v-btn
+                      outlined
+                      color="red"
+                      class="mr-5"
+                      @click="declineNotification(i)"
+                      >Decline</v-btn
+                    >
+                    <v-btn
+                      color="green"
+                      @click="acceptNotification(notification, i)"
+                      >Accept</v-btn
+                    >
+                  </div>
+                </v-expansion-panel-content>
+              </v-expansion-panel>
+            </v-expansion-panels>
+          </v-card>
+        </v-col>
+
+        <v-col cols="10" md="4">
           <v-card
             color="blue lighten-5"
             class="pa-5"
             max-height="500"
             style="overflow-y: scroll"
           >
-            <v-snackbar v-model="snackbar">
-              {{ snackbarText }}
-            </v-snackbar>
-
+            <div>TRADES:</div>
             <v-expansion-panels>
               <v-expansion-panel v-for="(trade, i) in trades" :key="i">
                 <v-expansion-panel-header>
@@ -146,74 +162,6 @@
                 </v-expansion-panel-content>
               </v-expansion-panel>
             </v-expansion-panels>
-
-            <!-- <div :key="deleteRefreshKey">
-              <div v-for="(trade, i) in trades" :key="i">
-                <v-container>
-                  <v-row>
-                    <v-col cols="12" md="6" class="d-flex flex-column">
-                      <v-card width="100%" class="pa-5 mb-3 d-flex">
-                        <div>
-                          <div>{{ trade.symbol }}</div>
-                          <div>{{ trade.direction }}</div>
-                          <div>{{ trade.entryPrice }}</div>
-                          <div>{{ trade.stopLoss }}</div>
-                          <div>{{ trade.recover }}</div>
-                        </div>
-                      </v-card>
-                      <v-btn
-                        class="mb-2 mx-auto white--text"
-                        color="red darken-1"
-                        @click="deleteTrade(trade)"
-                      >
-                        DELETE
-                      </v-btn>
-                    </v-col>
-                    <v-col cols="12" md="6" class="d-flex flex-column">
-                      <v-btn
-                        class="mb-2"
-                        color="blue lighten-1"
-                        @click="performCommand('HALF', trade)"
-                      >
-                        HALF
-                      </v-btn>
-                      <v-btn
-                        class="mb-2"
-                        color="teal lighten-3"
-                        @click="performCommand('TAKE PROFIT', trade)"
-                      >
-                        TAKE PROFIT
-                      </v-btn>
-                      <v-btn
-                        class="mb-2"
-                        color="yellow lighten-3"
-                        @click="performCommand('BREAKEVEN', trade)"
-                      >
-                        BREAKEVEN
-                      </v-btn>
-                      <v-btn
-                        class="mb-2"
-                        color="orange lighten-3"
-                        @click="performCommand('CLOSE', trade)"
-                      >
-                        CLOSE PENDING
-                      </v-btn>
-                      <v-btn
-                        class="mb-2"
-                        color="red lighten-1"
-                        @click="performCommand('CUTLOSS', trade)"
-                      >
-                        CUTLOSS
-                      </v-btn>
-                      <v-btn class="mb-2" color="green darken-1">
-                        REOPEN
-                      </v-btn>
-                    </v-col>
-                  </v-row>
-                </v-container>
-                <v-divider></v-divider>
-              </div>
-            </div> -->
           </v-card>
           <div class="d-flex justify-center">
             <v-btn color="red" class="mt-5 white--text" @click="resetDB()"
@@ -223,6 +171,10 @@
         </v-col>
       </v-row>
     </v-container>
+
+    <v-snackbar v-model="snackbar">
+      {{ snackbarText }}
+    </v-snackbar>
   </v-app>
 </template>
 
@@ -281,6 +233,7 @@
       haveNews: false,
       newsSymbol: "",
       newsTime: "",
+      notificationList: [],
 
       recover: false,
       snackbar: false,
@@ -291,8 +244,8 @@
 
       interval: null,
 
-     // baseApiUrl: "http://localhost:3000",
-       baseApiUrl: "https://tradefx-api.herokuapp.com",
+      // baseApiUrl: "http://localhost:3000",
+      baseApiUrl: "https://tradefx-api.herokuapp.com",
     }),
 
     mounted() {
@@ -307,7 +260,8 @@
           console.log("opening");
           this.interval = setInterval(() => {
             axios.get(this.baseApiUrl + "/notification").then((response) => {
-              this.onNotification(response.data);
+              this.notificationList = response.data;
+              console.log(this.notificationList);
             });
           }, 2000);
           console.log("opened");
@@ -581,6 +535,35 @@
         //   });
       },
 
+      acceptNotification(notification, index) {
+        this.message = notification;
+
+        this.format();
+
+        axios
+          .delete(`${this.baseApiUrl}/notification/${index}`)
+          .then((response) => {
+            console.log(response);
+            console.log("deleted");
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      },
+
+      declineNotification(notification) {
+        //axios delete
+        axios
+          .delete(`${this.baseApiUrl}/notification/${notification}`)
+          .then((response) => {
+            console.log(response);
+            console.log("deleted");
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      },
+
       reEnter(trade) {
         const { symbol, entryPrice, direction, stopLoss, recover } = trade;
         axios
@@ -612,168 +595,6 @@
           .catch(function (error) {
             console.log(error);
           });
-      },
-
-      onNotification(notification) {
-        console.log(notification);
-        var sentence = this.sentence.toLowerCase()
-        if (!(this.sentence == notification) && !this.sentence.includes('hit')) {
-          console.log("notification", notification);
-          this.sentence = notification;
-
-          this.entryPrice = 0;
-          this.stopLoss = 0;
-
-          for (var i = 0; i < this.list_of_symbols.length; i++) {
-            var tempSymbol = this.list_of_symbols[i];
-
-            //tempsymbol to lower case
-            tempSymbol = tempSymbol.toLowerCase();
-
-            //if tempSymbol is present in the sentence, set symbol to tempSymbol
-            if (this.sentence.toLowerCase().includes(tempSymbol)) {
-              this.symbol = tempSymbol;
-            }
-          }
-
-          var numbers = this.sentence.match(/\d+\.?\d*/g);
-
-          if (this.sentence.toLowerCase().includes("buy")) {
-            this.direction = "buy";
-          } else if (this.sentence.toLowerCase().includes("sell")) {
-            this.direction = "sell";
-          }
-
-          if (this.direction == "buy") {
-            numbers.sort(function (a, b) {
-              return a - b;
-            });
-          } else {
-            numbers.sort(function (a, b) {
-              return b - a;
-            });
-          }
-
-          console.log(numbers);
-
-          if (this.symbol == "xauusd" || this.symbol == "gold") {
-            for (var x = 0; x < numbers.length; x++) {
-              if (numbers[x] > 100) {
-                this.finalNumbers.push(numbers[x]);
-              }
-            }
-          } else {
-            for (var b = 0; b < numbers.length; b++) {
-              if (numbers[b].includes(".")) {
-                this.finalNumbers.push(numbers[b]);
-              }
-            }
-          }
-
-          this.stopLoss = this.finalNumbers[0];
-
-          //check if sentence contains dash
-          if (this.sentence.toLowerCase().includes("-")) {
-            this.entryPrice = this.finalNumbers[2];
-          } else {
-            this.entryPrice = this.finalNumbers[1];
-          }
-
-          this.symbol = this.symbol.toUpperCase();
-
-          //if symbol is XAUUSD change to GOLD
-          if (this.symbol == "XAUUSD") {
-            this.symbol = "GOLD";
-          }
-
-          //direction to upper case
-          this.direction = this.direction.toUpperCase();
-
-          console.log(
-            this.symbol,
-            this.entryPrice,
-            this.stopLoss,
-            this.direction
-          );
-
-          // this.trades.push({
-          //   symbol: this.symbol,
-          //   entryPrice: this.entryPrice,
-          //   stopLoss: this.stopLoss,
-          //   direction: this.direction,
-          // });
-
-          this.finalNumbers = [];
-
-          // axios.post(this.baseApiUrl, "HI").then((response) => {
-          //   console.log(response);
-          // }).catch((error) => {
-          //   console.log(error);
-          // });
-
-          var isDuplicate = false;
-
-          for (let i = 0; i < this.trades.length; i++) {
-            if (
-              this.trades[i].symbol == this.symbol &&
-              this.trades[i].direction == this.direction
-            ) {
-              console.log(this.trades[i].symbol);
-              isDuplicate = true;
-              this.snackbarText =
-                "Existing Trade, Wait for SL or TP / Symbol not Present";
-              this.snackbar = true;
-            }
-          }
-          //loop through news
-          for (let i = 0; i < this.news.length; i++) {
-            if (this.symbol.includes(this.news[i].symbol)) {
-              let { year, month, day, hour, minute } = this.news[i];
-
-              var date1 = new Date();
-              var date2 = new Date(year, month - 1, day, hour, minute, 0);
-
-              //check distance between 2 dates
-              var distance = date2.getTime() - date1.getTime();
-
-              //convert to hours
-              var hours = Math.floor(distance / (1000 * 60 * 60));
-              console.log(date2, "hours ", hours);
-              console.log(hours <= 1, hours);
-              if (hours <= 1 && hours >= -1) {
-                this.isNewsNear = true;
-                this.snackbarText = "Trade is near the news";
-                this.snackbar = true;
-              }
-            }
-          }
-
-          if (!isDuplicate && !this.isNewsNear && this.entryPrice != undefined && this.stopLoss != undefined) {
-            axios
-              .post(this.baseApiUrl + "/trades", {
-                symbol: this.symbol,
-                entryPrice: this.entryPrice,
-                stopLoss: this.stopLoss,
-                direction: this.direction,
-                recover: this.recover,
-              })
-              .then((response) => {
-                this.getTrades();
-                this.recover = false;
-                this.snackbarText = "Pending order added on " + this.symbol;
-                this.snackbar = true;
-              })
-              .catch(function (error) {
-                console.log(error);
-              });
-          } else {
-            this.isDuplicate = false;
-            this.isNewsNear = false;
-          }
-        } else {
-          this.snackbarText = "Same Notification";
-          this.snackbar = true;
-        }
       },
     },
   };
