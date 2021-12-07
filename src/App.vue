@@ -35,15 +35,31 @@
           <div class="headline font-weight-bold blue--text mb-5 text-center">
             TRADE FORMATTER
           </div>
-          <v-textarea outlined v-model="message" class="mb-7"></v-textarea>
+          <v-textarea outlined v-model="message" class="mb-5"></v-textarea>
+          <div class="d-flex justify-center mb-5">
+            <v-btn color="primary" class="mb-5" @click="format()">Format</v-btn>
+          </div>
           <div class="d-flex justify-center">
             <v-btn
-              @click="recover = true"
+              @click="recover = !recover"
               :color="recover ? 'green' : ''"
-              class="mr-2"
+              outlined
               >RECOVER</v-btn
             >
-            <v-btn color="primary" class="ml-2" @click="format()">Format</v-btn>
+            <v-btn
+              @click="trusted = !trusted"
+              :color="trusted ? 'green' : ''"
+              outlined
+              class="mx-4"
+              >TRUSTED
+            </v-btn>
+
+            <v-btn
+              @click="inProfit = !inProfit"
+              :color="inProfit ? 'green' : ''"
+              outlined
+              >IN PROFIT
+            </v-btn>
           </div>
         </v-col>
 
@@ -236,6 +252,8 @@
       notificationList: [],
 
       recover: false,
+      trusted: false,
+      inProfit: false,
       snackbar: false,
       snackbarText: "",
 
@@ -261,7 +279,6 @@
           this.interval = setInterval(() => {
             axios.get(this.baseApiUrl + "/notification").then((response) => {
               this.notificationList = response.data;
-              console.log(this.notificationList);
             });
           }, 2000);
           console.log("opened");
@@ -287,7 +304,7 @@
             }
           })
           .catch((error) => {
-            console.log(error);
+            // console.log(error);
           });
       },
 
@@ -409,8 +426,6 @@
           }
         }
 
-        this.stopLoss = this.finalNumbers[0];
-
         //check if sentence contains dash
         if (this.sentence.toLowerCase().includes("-")) {
           this.entryPrice = this.finalNumbers[2];
@@ -423,6 +438,31 @@
         //if symbol is XAUUSD change to GOLD
         if (this.symbol == "XAUUSD") {
           this.symbol = "GOLD";
+        }
+
+        if (!this.trusted) {
+          //check if JPY is present in symbol
+          if (this.symbol.includes("JPY")) {
+            if (this.direction == "buy") {
+              this.stopLoss = this.entryPrice - 0.4;
+            } else {
+              this.stopLoss = this.entryPrice + 0.4;
+            }
+          } else if (this.symbol == "GOLD") {
+            if (this.direction == "buy") {
+              this.stopLoss = this.entryPrice - 4;
+            } else {
+              this.stopLoss = this.entryPrice + 4;
+            }
+          } else {
+            if (this.direction == "buy") {
+              this.stopLoss = this.entryPrice - 0.004;
+            } else {
+              this.stopLoss = this.entryPrice + 0.004;
+            }
+          }
+        } else {
+          this.stopLoss = this.finalNumbers[0];
         }
 
         //direction to upper case
@@ -495,6 +535,7 @@
               stopLoss: this.stopLoss,
               direction: this.direction,
               recover: this.recover,
+              inProfit: this.inProfit,
             })
             .then((response) => {
               this.getTrades();
