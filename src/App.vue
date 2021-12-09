@@ -441,24 +441,25 @@
         }
 
         if (!this.trusted) {
+          console.log(this.symbol, this.trusted);
           //check if JPY is present in symbol
           if (this.symbol.includes("JPY")) {
             if (this.direction == "buy") {
-              this.stopLoss = this.entryPrice - 0.4;
+              this.stopLoss = parseFloat(this.entryPrice) - 0.4;
             } else {
-              this.stopLoss = this.entryPrice + 0.4;
+              this.stopLoss = parseFloat(this.entryPrice) + 0.4;
             }
           } else if (this.symbol == "GOLD") {
             if (this.direction == "buy") {
-              this.stopLoss = this.entryPrice - 4;
+              this.stopLoss = parseFloat(this.entryPrice) - 4;
             } else {
-              this.stopLoss = this.entryPrice + 4;
+              this.stopLoss = parseFloat(this.entryPrice) + 4;
             }
           } else {
             if (this.direction == "buy") {
-              this.stopLoss = this.entryPrice - 0.004;
+              this.stopLoss = parseFloat(this.entryPrice) - 0.004;
             } else {
-              this.stopLoss = this.entryPrice + 0.004;
+              this.stopLoss = parseFloat(this.entryPrice) + 0.004;
             }
           }
         } else {
