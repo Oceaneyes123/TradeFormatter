@@ -104,6 +104,84 @@
           >
             <div>TRADES:</div>
             <v-expansion-panels>
+              <v-expansion-panel>
+                <v-expansion-panel-header>
+                  <v-text-field outlined v-model="backupSymbol" class="mr-2">
+                  </v-text-field>
+                  <v-select
+                    :items="itemDirection"
+                    v-model="backupDirection"
+                  ></v-select>
+                </v-expansion-panel-header>
+                <v-expansion-panel-content>
+                  <v-container>
+                    <v-row>
+                      <v-col cols="12" md="6" class="d-flex flex-column">
+                        <v-btn
+                          class="mb-2"
+                          color="blue lighten-1"
+                          @click="
+                            performCommand('HALF', {
+                              symbol: backupSymbol.toUpperCase(),
+                              direction: backupDirection.toUpperCase(),
+                            })
+                          "
+                        >
+                          HALF
+                        </v-btn>
+                        <v-btn
+                          class="mb-2"
+                          color="teal lighten-3"
+                          @click="
+                            performCommand('TAKE PROFIT', {
+                              symbol: backupSymbol.toUpperCase(),
+                              direction: backupDirection.toUpperCase(),
+                            })
+                          "
+                        >
+                          TAKE PROFIT
+                        </v-btn>
+                        <v-btn
+                          class="mb-2"
+                          color="yellow lighten-3"
+                          @click="
+                            performCommand('BREAKEVEN', {
+                              symbol: backupSymbol.toUpperCase(),
+                              direction: backupDirection.toUpperCase(),
+                            })
+                          "
+                        >
+                          BREAKEVEN
+                        </v-btn>
+                        <v-btn
+                          class="mb-2"
+                          color="orange lighten-3"
+                          @click="
+                            performCommand('CLOSE', {
+                              symbol: backupSymbol.toUpperCase(),
+                              direction: backupDirection.toUpperCase(),
+                            })
+                          "
+                        >
+                          CLOSE PENDING
+                        </v-btn>
+                        <v-btn
+                          class="mb-2"
+                          color="red lighten-1"
+                          @click="
+                            performCommand('CUTLOSS', {
+                              symbol: backupSymbol.toUpperCase(),
+                              direction: backupDirection.toUpperCase(),
+                            })
+                          "
+                        >
+                          CUTLOSS
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-expansion-panel-content>
+              </v-expansion-panel>
               <v-expansion-panel v-for="(trade, i) in trades" :key="i">
                 <v-expansion-panel-header>
                   {{ trade.symbol }} {{ trade.direction }}
@@ -250,6 +328,9 @@
       newsSymbol: "",
       newsTime: "",
       notificationList: [],
+      backupSymbol: "",
+      backupDirection: "",
+      itemDirection: ["BUY", "SELL"],
 
       recover: false,
       trusted: false,
