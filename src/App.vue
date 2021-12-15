@@ -71,7 +71,7 @@
                 v-for="(notification, i) in notificationList"
                 :key="i"
               >
-                <v-expansion-panel-header>
+                <v-expansion-panel-header :color="checkColor(notification)">
                   {{ notification }}
                 </v-expansion-panel-header>
                 <v-expansion-panel-content>
@@ -328,6 +328,7 @@
       newsSymbol: "",
       newsTime: "",
       notificationList: [],
+      listOfHighAndLow: [],
       backupSymbol: "",
       backupDirection: "",
       itemDirection: ["BUY", "SELL"],
@@ -353,6 +354,157 @@
       this.getNews();
     },
 
+    watch: {
+      notificationList: function () {
+        this.listOfHighAndLow = [];
+        for (let i = 0; i < this.notificationList.length; i++) {
+          var tempSymbol = "";
+          var tempDirection = "";
+          var symbol = "";
+          for (let j = 0; j < this.list_of_symbols.length; j++) {
+            tempSymbol = this.list_of_symbols[j].toLowerCase();
+            if (this.notificationList[i].toLowerCase().includes(tempSymbol)) {
+              symbol = tempSymbol;
+            }
+            symbol = symbol.toUpperCase();
+          }
+
+          if (symbol == "XAUUSD") {
+            symbol = "GOLD";
+          }
+          //check direction
+          if (this.notificationList[i].toLowerCase().includes("buy")) {
+            tempDirection = "BUY";
+          } else if (this.notificationList[i].toLowerCase().includes("sell")) {
+            tempDirection = "SELL";
+          }
+
+          var isDuplicate = false;
+
+          for (let k = 0; k < this.listOfHighAndLow.length; k++) {
+            //check if tempSymbol and tempDirection is in listOfHighAndLow
+            if (
+              this.listOfHighAndLow[k].symbol == symbol &&
+              this.listOfHighAndLow[k].direction == tempDirection
+            ) {
+              isDuplicate = true;
+            }
+          }
+
+          if (!isDuplicate) {
+            this.listOfHighAndLow.push({
+              symbol: symbol == "XAUUSD" ? "GOLD" : symbol.toUpperCase(),
+              direction: tempDirection.toUpperCase(),
+              entry: []
+            });
+          }
+        }
+
+        for (let y = 0; y < this.notificationList.length; y++) {
+          for (let x = 0; x < this.listOfHighAndLow.length; x++) {
+            //replace xauusd with gold in notificationList[y]
+           this.notificationList[y] = this.notificationList[y].toLowerCase().replace("xauusd", "gold");
+
+            if (
+              this.notificationList[y]
+                .toLowerCase()
+                .includes(this.listOfHighAndLow[x].symbol.toLowerCase()) &&
+              this.notificationList[y]
+                .toLowerCase()
+                .includes(this.listOfHighAndLow[x].direction.toLowerCase())
+            ) {
+              var numbers = this.notificationList[y].match(/\d+\.?\d*/g);
+
+              if (this.listOfHighAndLow[x].direction.toLowerCase() == "buy") {
+                numbers.sort(function (a, b) {
+                  return a - b;
+                });
+              } else {
+                numbers.sort(function (a, b) {
+                  return b - a;
+                });
+              }
+
+              var finalNumbers = [];
+
+              if (
+                this.listOfHighAndLow[x].symbol.toLowerCase() == "xauusd" ||
+                this.listOfHighAndLow[x].symbol.toLowerCase() == "gold"
+              ) {
+                for (var a = 0; a < numbers.length; a++) {
+                  if (numbers[a] > 100) {
+                    finalNumbers.push(numbers[a]);
+                  }
+                }
+              } else {
+                for (var b = 0; b < numbers.length; b++) {
+                  if (numbers[b].includes(".")) {
+                    finalNumbers.push(numbers[b]);
+                  }
+                }
+              }
+
+            //  console.log(this.listOfHighAndLow[x].direction, finalNumbers);
+
+              if (this.notificationList[y].toLowerCase().includes("-")) {
+                  this.listOfHighAndLow[x].entry.push(finalNumbers[2]);
+              }else{
+                this.listOfHighAndLow[x].entry.push(finalNumbers[1]);
+              }
+
+              // //check if sentence contains dash
+              // if (this.notificationList[y].toLowerCase().includes("-")) {
+              //   if (this.listOfHighAndLow[x].direction.toLowerCase() == "buy") {
+              //     if (finalNumbers[2] < this.listOfHighAndLow[x].entry) {
+              //       this.listOfHighAndLow[x].entry = finalNumbers[2];
+              //     }
+              //   } else {
+              //     if (finalNumbers[2] > this.listOfHighAndLow[x].entry) {
+              //       this.listOfHighAndLow[x].entry = finalNumbers[2];
+              //     }
+              //   }
+              // } else {
+              //   if (this.listOfHighAndLow[x].direction.toLowerCase() == "buy") {
+              //     if (finalNumbers[1] < this.listOfHighAndLow[x].entry) {
+              //       this.listOfHighAndLow[x].entry = finalNumbers[1];
+              //     }
+              //   } else {
+              //     if (finalNumbers[1] > this.listOfHighAndLow[x].entry) {
+              //       this.listOfHighAndLow[x].entry = finalNumbers[1];
+              //     }
+              //   }
+              // }
+            }
+          }
+        }
+
+       
+        console.log('hello')
+
+        for(let c = 0; c < this.listOfHighAndLow.length; c++){
+          if(this.listOfHighAndLow[c].direction == "BUY"){
+           //sort entry in ascending order
+            this.listOfHighAndLow[c].entry.sort(function (a, b) {
+              return a - b;
+            });
+            console.log('sorted A')
+          }else{
+             this.listOfHighAndLow[c].entry.sort(function (a, b) {
+              return a - b;
+            });
+             console.log('sorted D')
+          }
+        }
+      
+
+         if (this.listOfHighAndLow.length > 0) {
+          console.log(this.listOfHighAndLow);
+        }
+
+
+      },
+    },
+
     methods: {
       checkNotification() {
         if (this.isCheckingNotification) {
@@ -369,6 +521,28 @@
           clearInterval(this.interval);
         }
       },
+
+     checkColor(notification){
+       var result
+       result = this.listOfHighAndLow.filter(item => notification.includes(item.direction.toLowerCase()) 
+       && notification.includes(item.symbol.toLowerCase()))
+
+       console.log(notification)
+       console.log(result)
+
+
+      if(notification.includes("buy")){
+         if(notification.includes(result[0].entry[0])){
+         return 'green lighten-2'
+       }
+      }
+
+        if(notification.includes("sell")){
+         if(notification.includes(result[0].entry[result[0].entry.length - 1])){
+         return 'green lighten-2'
+       }
+      }
+     },
 
       getTrades() {
         console.log("getTrades");
