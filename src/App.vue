@@ -75,7 +75,7 @@
                   {{ notification }}
                 </v-expansion-panel-header>
                 <v-expansion-panel-content>
-                  <div class="d-flex justify-end">
+                  <div class="d-flex justify-end mt-3">
                     <v-btn
                       outlined
                       color="red"
@@ -356,6 +356,7 @@
 
     watch: {
       notificationList: function () {
+        this.acceptNotification(this.notificationList[0], 0)
         this.listOfHighAndLow = [];
         for (let i = 0; i < this.notificationList.length; i++) {
           var tempSymbol = "";
@@ -444,42 +445,16 @@
                 }
               }
 
-            //  console.log(this.listOfHighAndLow[x].direction, finalNumbers);
-
               if (this.notificationList[y].toLowerCase().includes("-")) {
                   this.listOfHighAndLow[x].entry.push(finalNumbers[2]);
               }else{
                 this.listOfHighAndLow[x].entry.push(finalNumbers[1]);
               }
-
-              // //check if sentence contains dash
-              // if (this.notificationList[y].toLowerCase().includes("-")) {
-              //   if (this.listOfHighAndLow[x].direction.toLowerCase() == "buy") {
-              //     if (finalNumbers[2] < this.listOfHighAndLow[x].entry) {
-              //       this.listOfHighAndLow[x].entry = finalNumbers[2];
-              //     }
-              //   } else {
-              //     if (finalNumbers[2] > this.listOfHighAndLow[x].entry) {
-              //       this.listOfHighAndLow[x].entry = finalNumbers[2];
-              //     }
-              //   }
-              // } else {
-              //   if (this.listOfHighAndLow[x].direction.toLowerCase() == "buy") {
-              //     if (finalNumbers[1] < this.listOfHighAndLow[x].entry) {
-              //       this.listOfHighAndLow[x].entry = finalNumbers[1];
-              //     }
-              //   } else {
-              //     if (finalNumbers[1] > this.listOfHighAndLow[x].entry) {
-              //       this.listOfHighAndLow[x].entry = finalNumbers[1];
-              //     }
-              //   }
-              // }
             }
           }
         }
 
        
-        console.log('hello')
 
         for(let c = 0; c < this.listOfHighAndLow.length; c++){
           if(this.listOfHighAndLow[c].direction == "BUY"){
@@ -487,18 +462,12 @@
             this.listOfHighAndLow[c].entry.sort(function (a, b) {
               return a - b;
             });
-            console.log('sorted A')
+          
           }else{
              this.listOfHighAndLow[c].entry.sort(function (a, b) {
               return a - b;
             });
-             console.log('sorted D')
           }
-        }
-      
-
-         if (this.listOfHighAndLow.length > 0) {
-          console.log(this.listOfHighAndLow);
         }
 
 
@@ -526,10 +495,6 @@
        var result
        result = this.listOfHighAndLow.filter(item => notification.includes(item.direction.toLowerCase()) 
        && notification.includes(item.symbol.toLowerCase()))
-
-       console.log(notification)
-       console.log(result)
-
 
       if(notification.includes("buy")){
          if(notification.includes(result[0].entry[0])){
@@ -783,8 +748,28 @@
           }
         }
 
-        if (!isDuplicate && !this.isNewsNear) {
+        if (!isDuplicate && !this.isNewsNear && this.symbol != "GOLD") {
           axios
+            .post(this.baseApiUrl + "/trades", {
+              symbol: this.symbol,
+              entryPrice: this.entryPrice,
+              stopLoss: this.stopLoss,
+              direction: this.direction,
+              recover: this.recover,
+              inProfit: this.inProfit,
+            })
+            .then((response) => {
+              this.getTrades();
+              this.recover = false;
+              this.message = "";
+              this.snackbarText = "Pending order added on " + this.symbol;
+              this.snackbar = true;
+            })
+            .catch(function (error) {
+              console.log(error);
+            });
+        } else if(!this.isNewsNear && this.symbol == "GOLD"){
+           axios
             .post(this.baseApiUrl + "/trades", {
               symbol: this.symbol,
               entryPrice: this.entryPrice,
